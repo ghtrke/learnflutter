@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'snake.dart';
 import 'dart:async';
 
-// TODO: 这些 const 是用来干啥的？
 void main() {
   runApp(const MyApp());
 }
 
+// TODO: https://juejin.cn/post/6977212326394986510
 // TODO: 消除所有的 warning
 // TODO: myapp 是一个 statelesswidget, 但是它包含的 widget 是一个 statefulwidget, 具体的渲染机制是？
 class MyApp extends StatelessWidget {
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: SafeArea(
         child: Scaffold(
           body: GameLayout(),
@@ -69,7 +69,7 @@ class _GameLayoutState extends State<GameLayout> {
       this.snake.resetLocation();
 
       Timer.periodic(
-        Duration(milliseconds: 10000), 
+        Duration(milliseconds: 300), 
         (Timer timer){
           _moveSnake();
           if(_isGameOver()) {

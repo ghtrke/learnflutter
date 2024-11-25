@@ -32,8 +32,10 @@ class Snake {
     int rowIndex = rand.nextInt(maxRowCnt);
     int columnIndex = rand.nextInt(maxColumnCnt);
 
-    // TODO: make sure the food point does not collide with the snake
     this.foodPoint = Point(rowIndex, columnIndex);
+    while (this.locations.contains(this.foodPoint)) {
+      this.foodPoint = Point(rowIndex, columnIndex);
+    }
   }
 
   void move(String direction) {
@@ -52,8 +54,8 @@ class Snake {
 
     // TODO: 不正确的吃掉了 foodpoint
     if (head_next_location == this.foodPoint) {
-      generateFoodPoint();
       this.locations.insert(0, this.foodPoint);
+      generateFoodPoint();
       return;
     } else {
       this.locations.insert(0, head_next_location);
