@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:todo/listpage.dart';
 import 'package:intl/intl.dart';
-import 'db/db.dart';
-import 'db/plan.dart';
+import 'db/database.dart';
+import 'db/dao/plans_dao.dart';
+
 
 final List<String> _timeSelections = List<String>.generate(48, (i) {
   int hour = i ~/ 2;
@@ -37,10 +38,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
   TextEditingController _titleController = TextEditingController();
 
   // date selection
-  DateTime _selectedDate = DateTime.now();
+  String _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   // time selection
-  TimeOfDay? _selectedTime;
+  String? _selectedTime;
 
   // reoccurrences
   List<String>? _selectedWeekdays;
@@ -56,7 +57,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
     if(widget.planId == null) {
       _titleController = TextEditingController();
-      _selectedDate = DateTime.now();      
+      _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
       _selectedWeekdays = [];
     } else {
       _loadItem();
@@ -70,13 +71,17 @@ class _ItemFormPageState extends State<ItemFormPage> {
   }
 
   Future<void> _loadItem() async {
-    Plan item = await DatabaseHelper().getPlan(widget.planId!);
+    Plan item = await DatabaseInstance().plansDao.getPlan(widget.planId!);
 
     setState(() {
       _titleController = TextEditingController(text: item.title);
       _selectedDate = item.startDate;
       _selectedTime = item.startTime;
-      _selectedWeekdays = (item.weekdays ?? []);
+      if(item.weekdays != null && item.weekdays!.isNotEmpty) {
+        _selectedWeekdays = item.weekdays!.split(',');
+      } else {
+        _selectedWeekdays = [];
+      }
       if(_selectedWeekdays == null) {
         _weekdayButtonText = '';
       } else {
@@ -95,7 +100,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
     if (picked != null) {
       setState((){
-        _selectedDate = picked;
+        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
   }
@@ -151,20 +156,20 @@ class _ItemFormPageState extends State<ItemFormPage> {
   void _insertOrUpdateData() {
     if (widget.planId != null){
       // TODO: 需要同时更新 execution
-      DatabaseHelper().updatePlan(
+      DatabaseInstance().plansDao.updatePlan(
         widget.planId!, 
         title: _titleController.text,
         startDate: _selectedDate,
         startTime: _selectedTime!,
-        weekdays: _selectedWeekdays,
+        weekdays: _weekdayButtonText,
       );
     } else {
       // TODO: 需要同时更新 execution
-      DatabaseHelper().insertPlan(
+      DatabaseInstance().plansDao.insertPlan(
         title: _titleController.text,
         startDate: _selectedDate,
         startTime: _selectedTime!,
-        weekdays: _selectedWeekdays,
+        weekdays: _weekdayButtonText,
       );
     }
 
@@ -197,8 +202,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
             // title
             TextFormField(
               controller: _titleController,
-              decoration: InputDecoration(
-                  labelText: (AppLocalizations.of(context)!.title)),
+              decoration: const InputDecoration(labelText: 'Input title'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Empty title not allowed';
@@ -211,7 +215,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
             // 日期选择
             TextField(
               readOnly: true,
-              controller: TextEditingController(text: _selectedDate == null ? "" : DateFormat('yyyy-MM-dd').format(_selectedDate)),
+              controller: TextEditingController(text: _selectedDate),
               decoration: const InputDecoration(
                 labelText: 'Select Date',
                 border: OutlineInputBorder(),
@@ -230,10 +234,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
               }).toList(), 
               onChanged: (String? newValue) {
                 setState((){
-                  _selectedTime = Plan.parseStringToTime(newValue);
+                  _selectedTime = newValue;
                 });
               },
-              value: Plan.timeToString(_selectedTime),
+              value: _selectedTime,
               hint: const Text('Start Time'),
             ),
             // 重复方式选择, 需要多选的实现方式

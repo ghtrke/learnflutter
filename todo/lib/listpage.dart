@@ -54,24 +54,24 @@ class _TODOListState extends State<TODOList> {
     });
   }
 
-  Future<void> _updateCheckStatus(int id, bool isChecked) async {
-    await DatabaseInstance().executionsDao.updateCheckStatus(id, isChecked);
+  void _updateCheckStatus(int id, bool isChecked) {
+    DatabaseInstance().executionsDao.updateCheckStatus(id, isChecked);
   }
 
-  Future<void> _removeExecution(int id) async {
-    await DatabaseHelper().removeExecution(id);
+  void _removeExecution(int id) {
+    DatabaseInstance().executionsDao.removeExecution(id);
   }
 
-  Future<void> _removeExecutions(DateTime startDate, int planId) async {
-    await DatabaseHelper().removeExecutions(startDate, planId);
+  void _removeExecutions(String startDateString, int planId) {
+    DatabaseInstance().executionsDao.removeExecutions(startDateString, planId);
   }
 
-  Future<void> _splitPlan(int planId, DateTime startDate) async {
-    await DatabaseHelper().splitPlan(planId, startDate);
+  void _splitPlan(int planId, String startDateString) {
+    DatabaseInstance().plansDao.splitPlan(planId, startDateString);
   }
 
-  Future<void> _endPlan(int planId, DateTime startDate) async {
-    await DatabaseHelper().endPlan(planId, startDate);
+  void _endPlan(int planId, String startDateString) {
+    DatabaseInstance().plansDao.endPlan(planId, startDateString);
   }
 
   // ask user if he wants to remove only this item or all consecutive ones
@@ -88,7 +88,8 @@ class _TODOListState extends State<TODOList> {
               onPressed: () {
                 setState(
                   () {
-                    _removeExecution(_items[index].id!);
+                    // TODO: 以下函数应该都可以不用声明成 async 的
+                    _removeExecution(_items[index].id);
                     _splitPlan(_items[index].planId, _items[index].startDate);
                     _items.removeAt(index);
                   },
@@ -165,16 +166,17 @@ class _TODOListState extends State<TODOList> {
             children: [
               Checkbox(
                 value: _items[index].isChecked, 
-                onChanged: (bool? newValue) async {
-                  await _updateCheckStatus(_items[index].planId, newValue!);
+                onChanged: (bool? newValue) {
+                  _updateCheckStatus(_items[index].planId, newValue!);
                   setState(() {
-                    _items[index].isChecked = newValue;
+                    // done: drift 中，row class 代表从数据库获取的数据，不允许改变；companion 用于更新数据, 如果要改变数据，使用 copyWith 方法构造一条新数据
+                    _items[index] = _items[index].copyWith(isChecked: newValue);
                   });
               }),
               GestureDetector(
                 onTap: () => _showOptionsDialog(context, index),
                 child: Text(
-                  '${Plan.timeToString(_items[index].startTime)} ${_items[index].title}',
+                  '${(_items[index].startTime)} ${_items[index].title}',
                   style: TextStyle(
                     fontWeight: _items[index].isChecked ? FontWeight.bold : FontWeight.normal
                   )),

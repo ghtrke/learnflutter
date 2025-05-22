@@ -8,27 +8,30 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $PlansTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> startDate =
-      GeneratedColumn<String>('start_date', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<DateTime>($PlansTable.$converterstartDate);
+  late final GeneratedColumn<String> startDate = GeneratedColumn<String>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
   @override
-  late final GeneratedColumnWithTypeConverter<TimeOfDay, String> startTime =
-      GeneratedColumn<String>('start_time', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<TimeOfDay>($PlansTable.$converterstartTime);
+  late final GeneratedColumn<String> startTime = GeneratedColumn<String>(
+      'start_time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _weekdaysMeta =
+      const VerificationMeta('weekdays');
   @override
-  late final GeneratedColumnWithTypeConverter<List<String>?, String> weekdays =
-      GeneratedColumn<String>('weekdays', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<List<String>?>($PlansTable.$converterweekdaysn);
+  late final GeneratedColumn<String> weekdays = GeneratedColumn<String>(
+      'weekdays', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _endDateMeta =
       const VerificationMeta('endDate');
   @override
-  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+  late final GeneratedColumn<String> endDate = GeneratedColumn<String>(
       'end_date', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdOnMeta =
       const VerificationMeta('createdOn');
   @override
@@ -76,6 +79,22 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
+    if (data.containsKey('weekdays')) {
+      context.handle(_weekdaysMeta,
+          weekdays.isAcceptableOrUnknown(data['weekdays']!, _weekdaysMeta));
+    }
     if (data.containsKey('end_date')) {
       context.handle(_endDateMeta,
           endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
@@ -112,17 +131,14 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   Plan map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Plan(
-      startDate: $PlansTable.$converterstartDate.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}start_date'])!),
-      startTime: $PlansTable.$converterstartTime.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}start_time'])!),
-      weekdays: $PlansTable.$converterweekdaysn.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}weekdays'])),
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_date'])!,
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_time'])!,
+      weekdays: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}weekdays']),
       endDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date']),
+          .read(DriftSqlType.string, data['${effectivePrefix}end_date']),
       createdOn: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_on'])!,
       modifiedOn: attachedDatabase.typeMapping
@@ -138,22 +154,13 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   $PlansTable createAlias(String alias) {
     return $PlansTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<DateTime, String> $converterstartDate =
-      CustomDateConverter();
-  static TypeConverter<TimeOfDay, String> $converterstartTime =
-      CustomTimeTypeConverter();
-  static TypeConverter<List<String>, String> $converterweekdays =
-      CustomListConverter();
-  static TypeConverter<List<String>?, String?> $converterweekdaysn =
-      NullAwareTypeConverter.wrap($converterweekdays);
 }
 
 class Plan extends DataClass implements Insertable<Plan> {
-  final DateTime startDate;
-  final TimeOfDay startTime;
-  final List<String>? weekdays;
-  final DateTime? endDate;
+  final String startDate;
+  final String startTime;
+  final String? weekdays;
+  final String? endDate;
   final DateTime createdOn;
   final DateTime modifiedOn;
   final int id;
@@ -170,20 +177,13 @@ class Plan extends DataClass implements Insertable<Plan> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    {
-      map['start_date'] =
-          Variable<String>($PlansTable.$converterstartDate.toSql(startDate));
-    }
-    {
-      map['start_time'] =
-          Variable<String>($PlansTable.$converterstartTime.toSql(startTime));
-    }
+    map['start_date'] = Variable<String>(startDate);
+    map['start_time'] = Variable<String>(startTime);
     if (!nullToAbsent || weekdays != null) {
-      map['weekdays'] =
-          Variable<String>($PlansTable.$converterweekdaysn.toSql(weekdays));
+      map['weekdays'] = Variable<String>(weekdays);
     }
     if (!nullToAbsent || endDate != null) {
-      map['end_date'] = Variable<DateTime>(endDate);
+      map['end_date'] = Variable<String>(endDate);
     }
     map['created_on'] = Variable<DateTime>(createdOn);
     map['modified_on'] = Variable<DateTime>(modifiedOn);
@@ -213,10 +213,10 @@ class Plan extends DataClass implements Insertable<Plan> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Plan(
-      startDate: serializer.fromJson<DateTime>(json['startDate']),
-      startTime: serializer.fromJson<TimeOfDay>(json['startTime']),
-      weekdays: serializer.fromJson<List<String>?>(json['weekdays']),
-      endDate: serializer.fromJson<DateTime?>(json['endDate']),
+      startDate: serializer.fromJson<String>(json['startDate']),
+      startTime: serializer.fromJson<String>(json['startTime']),
+      weekdays: serializer.fromJson<String?>(json['weekdays']),
+      endDate: serializer.fromJson<String?>(json['endDate']),
       createdOn: serializer.fromJson<DateTime>(json['createdOn']),
       modifiedOn: serializer.fromJson<DateTime>(json['modifiedOn']),
       id: serializer.fromJson<int>(json['id']),
@@ -227,10 +227,10 @@ class Plan extends DataClass implements Insertable<Plan> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'startDate': serializer.toJson<DateTime>(startDate),
-      'startTime': serializer.toJson<TimeOfDay>(startTime),
-      'weekdays': serializer.toJson<List<String>?>(weekdays),
-      'endDate': serializer.toJson<DateTime?>(endDate),
+      'startDate': serializer.toJson<String>(startDate),
+      'startTime': serializer.toJson<String>(startTime),
+      'weekdays': serializer.toJson<String?>(weekdays),
+      'endDate': serializer.toJson<String?>(endDate),
       'createdOn': serializer.toJson<DateTime>(createdOn),
       'modifiedOn': serializer.toJson<DateTime>(modifiedOn),
       'id': serializer.toJson<int>(id),
@@ -239,10 +239,10 @@ class Plan extends DataClass implements Insertable<Plan> {
   }
 
   Plan copyWith(
-          {DateTime? startDate,
-          TimeOfDay? startTime,
-          Value<List<String>?> weekdays = const Value.absent(),
-          Value<DateTime?> endDate = const Value.absent(),
+          {String? startDate,
+          String? startTime,
+          Value<String?> weekdays = const Value.absent(),
+          Value<String?> endDate = const Value.absent(),
           DateTime? createdOn,
           DateTime? modifiedOn,
           int? id,
@@ -304,10 +304,10 @@ class Plan extends DataClass implements Insertable<Plan> {
 }
 
 class PlansCompanion extends UpdateCompanion<Plan> {
-  final Value<DateTime> startDate;
-  final Value<TimeOfDay> startTime;
-  final Value<List<String>?> weekdays;
-  final Value<DateTime?> endDate;
+  final Value<String> startDate;
+  final Value<String> startTime;
+  final Value<String?> weekdays;
+  final Value<String?> endDate;
   final Value<DateTime> createdOn;
   final Value<DateTime> modifiedOn;
   final Value<int> id;
@@ -323,8 +323,8 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     this.title = const Value.absent(),
   });
   PlansCompanion.insert({
-    required DateTime startDate,
-    required TimeOfDay startTime,
+    required String startDate,
+    required String startTime,
     this.weekdays = const Value.absent(),
     this.endDate = const Value.absent(),
     required DateTime createdOn,
@@ -340,7 +340,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     Expression<String>? startDate,
     Expression<String>? startTime,
     Expression<String>? weekdays,
-    Expression<DateTime>? endDate,
+    Expression<String>? endDate,
     Expression<DateTime>? createdOn,
     Expression<DateTime>? modifiedOn,
     Expression<int>? id,
@@ -359,10 +359,10 @@ class PlansCompanion extends UpdateCompanion<Plan> {
   }
 
   PlansCompanion copyWith(
-      {Value<DateTime>? startDate,
-      Value<TimeOfDay>? startTime,
-      Value<List<String>?>? weekdays,
-      Value<DateTime?>? endDate,
+      {Value<String>? startDate,
+      Value<String>? startTime,
+      Value<String?>? weekdays,
+      Value<String?>? endDate,
       Value<DateTime>? createdOn,
       Value<DateTime>? modifiedOn,
       Value<int>? id,
@@ -383,19 +383,16 @@ class PlansCompanion extends UpdateCompanion<Plan> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (startDate.present) {
-      map['start_date'] = Variable<String>(
-          $PlansTable.$converterstartDate.toSql(startDate.value));
+      map['start_date'] = Variable<String>(startDate.value);
     }
     if (startTime.present) {
-      map['start_time'] = Variable<String>(
-          $PlansTable.$converterstartTime.toSql(startTime.value));
+      map['start_time'] = Variable<String>(startTime.value);
     }
     if (weekdays.present) {
-      map['weekdays'] = Variable<String>(
-          $PlansTable.$converterweekdaysn.toSql(weekdays.value));
+      map['weekdays'] = Variable<String>(weekdays.value);
     }
     if (endDate.present) {
-      map['end_date'] = Variable<DateTime>(endDate.value);
+      map['end_date'] = Variable<String>(endDate.value);
     }
     if (createdOn.present) {
       map['created_on'] = Variable<DateTime>(createdOn.value);
@@ -453,16 +450,18 @@ class $ExecutionsTable extends Executions
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
       'title', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> startDate =
-      GeneratedColumn<String>('start_date', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<DateTime>($ExecutionsTable.$converterstartDate);
+  late final GeneratedColumn<String> startDate = GeneratedColumn<String>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
   @override
-  late final GeneratedColumnWithTypeConverter<TimeOfDay, String> startTime =
-      GeneratedColumn<String>('start_time', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<TimeOfDay>($ExecutionsTable.$converterstartTime);
+  late final GeneratedColumn<String> startTime = GeneratedColumn<String>(
+      'start_time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _createdOnMeta =
       const VerificationMeta('createdOn');
   @override
@@ -523,6 +522,18 @@ class $ExecutionsTable extends Executions
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
     if (data.containsKey('created_on')) {
       context.handle(_createdOnMeta,
           createdOn.isAcceptableOrUnknown(data['created_on']!, _createdOnMeta));
@@ -555,12 +566,10 @@ class $ExecutionsTable extends Executions
           .read(DriftSqlType.int, data['${effectivePrefix}plan_id'])!,
       title: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      startDate: $ExecutionsTable.$converterstartDate.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}start_date'])!),
-      startTime: $ExecutionsTable.$converterstartTime.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}start_time'])!),
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_date'])!,
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_time'])!,
       createdOn: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_on'])!,
       modifiedOn: attachedDatabase.typeMapping
@@ -574,19 +583,14 @@ class $ExecutionsTable extends Executions
   $ExecutionsTable createAlias(String alias) {
     return $ExecutionsTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<DateTime, String> $converterstartDate =
-      CustomDateConverter();
-  static TypeConverter<TimeOfDay, String> $converterstartTime =
-      CustomTimeTypeConverter();
 }
 
 class Execution extends DataClass implements Insertable<Execution> {
   final bool isChecked;
   final int planId;
   final String title;
-  final DateTime startDate;
-  final TimeOfDay startTime;
+  final String startDate;
+  final String startTime;
   final DateTime createdOn;
   final DateTime modifiedOn;
   final int id;
@@ -605,14 +609,8 @@ class Execution extends DataClass implements Insertable<Execution> {
     map['is_checked'] = Variable<bool>(isChecked);
     map['plan_id'] = Variable<int>(planId);
     map['title'] = Variable<String>(title);
-    {
-      map['start_date'] = Variable<String>(
-          $ExecutionsTable.$converterstartDate.toSql(startDate));
-    }
-    {
-      map['start_time'] = Variable<String>(
-          $ExecutionsTable.$converterstartTime.toSql(startTime));
-    }
+    map['start_date'] = Variable<String>(startDate);
+    map['start_time'] = Variable<String>(startTime);
     map['created_on'] = Variable<DateTime>(createdOn);
     map['modified_on'] = Variable<DateTime>(modifiedOn);
     map['id'] = Variable<int>(id);
@@ -639,8 +637,8 @@ class Execution extends DataClass implements Insertable<Execution> {
       isChecked: serializer.fromJson<bool>(json['isChecked']),
       planId: serializer.fromJson<int>(json['planId']),
       title: serializer.fromJson<String>(json['title']),
-      startDate: serializer.fromJson<DateTime>(json['startDate']),
-      startTime: serializer.fromJson<TimeOfDay>(json['startTime']),
+      startDate: serializer.fromJson<String>(json['startDate']),
+      startTime: serializer.fromJson<String>(json['startTime']),
       createdOn: serializer.fromJson<DateTime>(json['createdOn']),
       modifiedOn: serializer.fromJson<DateTime>(json['modifiedOn']),
       id: serializer.fromJson<int>(json['id']),
@@ -653,8 +651,8 @@ class Execution extends DataClass implements Insertable<Execution> {
       'isChecked': serializer.toJson<bool>(isChecked),
       'planId': serializer.toJson<int>(planId),
       'title': serializer.toJson<String>(title),
-      'startDate': serializer.toJson<DateTime>(startDate),
-      'startTime': serializer.toJson<TimeOfDay>(startTime),
+      'startDate': serializer.toJson<String>(startDate),
+      'startTime': serializer.toJson<String>(startTime),
       'createdOn': serializer.toJson<DateTime>(createdOn),
       'modifiedOn': serializer.toJson<DateTime>(modifiedOn),
       'id': serializer.toJson<int>(id),
@@ -665,8 +663,8 @@ class Execution extends DataClass implements Insertable<Execution> {
           {bool? isChecked,
           int? planId,
           String? title,
-          DateTime? startDate,
-          TimeOfDay? startTime,
+          String? startDate,
+          String? startTime,
           DateTime? createdOn,
           DateTime? modifiedOn,
           int? id}) =>
@@ -730,8 +728,8 @@ class ExecutionsCompanion extends UpdateCompanion<Execution> {
   final Value<bool> isChecked;
   final Value<int> planId;
   final Value<String> title;
-  final Value<DateTime> startDate;
-  final Value<TimeOfDay> startTime;
+  final Value<String> startDate;
+  final Value<String> startTime;
   final Value<DateTime> createdOn;
   final Value<DateTime> modifiedOn;
   final Value<int> id;
@@ -749,8 +747,8 @@ class ExecutionsCompanion extends UpdateCompanion<Execution> {
     required bool isChecked,
     required int planId,
     required String title,
-    required DateTime startDate,
-    required TimeOfDay startTime,
+    required String startDate,
+    required String startTime,
     required DateTime createdOn,
     required DateTime modifiedOn,
     this.id = const Value.absent(),
@@ -787,8 +785,8 @@ class ExecutionsCompanion extends UpdateCompanion<Execution> {
       {Value<bool>? isChecked,
       Value<int>? planId,
       Value<String>? title,
-      Value<DateTime>? startDate,
-      Value<TimeOfDay>? startTime,
+      Value<String>? startDate,
+      Value<String>? startTime,
       Value<DateTime>? createdOn,
       Value<DateTime>? modifiedOn,
       Value<int>? id}) {
@@ -817,12 +815,10 @@ class ExecutionsCompanion extends UpdateCompanion<Execution> {
       map['title'] = Variable<String>(title.value);
     }
     if (startDate.present) {
-      map['start_date'] = Variable<String>(
-          $ExecutionsTable.$converterstartDate.toSql(startDate.value));
+      map['start_date'] = Variable<String>(startDate.value);
     }
     if (startTime.present) {
-      map['start_time'] = Variable<String>(
-          $ExecutionsTable.$converterstartTime.toSql(startTime.value));
+      map['start_time'] = Variable<String>(startTime.value);
     }
     if (createdOn.present) {
       map['created_on'] = Variable<DateTime>(createdOn.value);
@@ -864,23 +860,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [plans, executions];
+  @override
+  DriftDatabaseOptions get options =>
+      const DriftDatabaseOptions(storeDateTimeAsText: true);
 }
 
 typedef $$PlansTableCreateCompanionBuilder = PlansCompanion Function({
-  required DateTime startDate,
-  required TimeOfDay startTime,
-  Value<List<String>?> weekdays,
-  Value<DateTime?> endDate,
+  required String startDate,
+  required String startTime,
+  Value<String?> weekdays,
+  Value<String?> endDate,
   required DateTime createdOn,
   required DateTime modifiedOn,
   Value<int> id,
   required String title,
 });
 typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
-  Value<DateTime> startDate,
-  Value<TimeOfDay> startTime,
-  Value<List<String>?> weekdays,
-  Value<DateTime?> endDate,
+  Value<String> startDate,
+  Value<String> startTime,
+  Value<String?> weekdays,
+  Value<String?> endDate,
   Value<DateTime> createdOn,
   Value<DateTime> modifiedOn,
   Value<int> id,
@@ -895,22 +894,16 @@ class $$PlansTableFilterComposer extends Composer<_$AppDatabase, $PlansTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get startDate =>
-      $composableBuilder(
-          column: $table.startDate,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<TimeOfDay, TimeOfDay, String> get startTime =>
-      $composableBuilder(
-          column: $table.startTime,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<List<String>?, List<String>, String>
-      get weekdays => $composableBuilder(
-          column: $table.weekdays,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get weekdays => $composableBuilder(
+      column: $table.weekdays, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get endDate => $composableBuilder(
+  ColumnFilters<String> get endDate => $composableBuilder(
       column: $table.endDate, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdOn => $composableBuilder(
@@ -944,7 +937,7 @@ class $$PlansTableOrderingComposer
   ColumnOrderings<String> get weekdays => $composableBuilder(
       column: $table.weekdays, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get endDate => $composableBuilder(
+  ColumnOrderings<String> get endDate => $composableBuilder(
       column: $table.endDate, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdOn => $composableBuilder(
@@ -969,16 +962,16 @@ class $$PlansTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<DateTime, String> get startDate =>
+  GeneratedColumn<String> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<TimeOfDay, String> get startTime =>
+  GeneratedColumn<String> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<List<String>?, String> get weekdays =>
+  GeneratedColumn<String> get weekdays =>
       $composableBuilder(column: $table.weekdays, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get endDate =>
+  GeneratedColumn<String> get endDate =>
       $composableBuilder(column: $table.endDate, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdOn =>
@@ -1017,10 +1010,10 @@ class $$PlansTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$PlansTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<DateTime> startDate = const Value.absent(),
-            Value<TimeOfDay> startTime = const Value.absent(),
-            Value<List<String>?> weekdays = const Value.absent(),
-            Value<DateTime?> endDate = const Value.absent(),
+            Value<String> startDate = const Value.absent(),
+            Value<String> startTime = const Value.absent(),
+            Value<String?> weekdays = const Value.absent(),
+            Value<String?> endDate = const Value.absent(),
             Value<DateTime> createdOn = const Value.absent(),
             Value<DateTime> modifiedOn = const Value.absent(),
             Value<int> id = const Value.absent(),
@@ -1037,10 +1030,10 @@ class $$PlansTableTableManager extends RootTableManager<
             title: title,
           ),
           createCompanionCallback: ({
-            required DateTime startDate,
-            required TimeOfDay startTime,
-            Value<List<String>?> weekdays = const Value.absent(),
-            Value<DateTime?> endDate = const Value.absent(),
+            required String startDate,
+            required String startTime,
+            Value<String?> weekdays = const Value.absent(),
+            Value<String?> endDate = const Value.absent(),
             required DateTime createdOn,
             required DateTime modifiedOn,
             Value<int> id = const Value.absent(),
@@ -1079,8 +1072,8 @@ typedef $$ExecutionsTableCreateCompanionBuilder = ExecutionsCompanion Function({
   required bool isChecked,
   required int planId,
   required String title,
-  required DateTime startDate,
-  required TimeOfDay startTime,
+  required String startDate,
+  required String startTime,
   required DateTime createdOn,
   required DateTime modifiedOn,
   Value<int> id,
@@ -1089,8 +1082,8 @@ typedef $$ExecutionsTableUpdateCompanionBuilder = ExecutionsCompanion Function({
   Value<bool> isChecked,
   Value<int> planId,
   Value<String> title,
-  Value<DateTime> startDate,
-  Value<TimeOfDay> startTime,
+  Value<String> startDate,
+  Value<String> startTime,
   Value<DateTime> createdOn,
   Value<DateTime> modifiedOn,
   Value<int> id,
@@ -1114,15 +1107,11 @@ class $$ExecutionsTableFilterComposer
   ColumnFilters<String> get title => $composableBuilder(
       column: $table.title, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get startDate =>
-      $composableBuilder(
-          column: $table.startDate,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<TimeOfDay, TimeOfDay, String> get startTime =>
-      $composableBuilder(
-          column: $table.startTime,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdOn => $composableBuilder(
       column: $table.createdOn, builder: (column) => ColumnFilters(column));
@@ -1186,10 +1175,10 @@ class $$ExecutionsTableAnnotationComposer
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<DateTime, String> get startDate =>
+  GeneratedColumn<String> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<TimeOfDay, String> get startTime =>
+  GeneratedColumn<String> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdOn =>
@@ -1228,8 +1217,8 @@ class $$ExecutionsTableTableManager extends RootTableManager<
             Value<bool> isChecked = const Value.absent(),
             Value<int> planId = const Value.absent(),
             Value<String> title = const Value.absent(),
-            Value<DateTime> startDate = const Value.absent(),
-            Value<TimeOfDay> startTime = const Value.absent(),
+            Value<String> startDate = const Value.absent(),
+            Value<String> startTime = const Value.absent(),
             Value<DateTime> createdOn = const Value.absent(),
             Value<DateTime> modifiedOn = const Value.absent(),
             Value<int> id = const Value.absent(),
@@ -1248,8 +1237,8 @@ class $$ExecutionsTableTableManager extends RootTableManager<
             required bool isChecked,
             required int planId,
             required String title,
-            required DateTime startDate,
-            required TimeOfDay startTime,
+            required String startDate,
+            required String startTime,
             required DateTime createdOn,
             required DateTime modifiedOn,
             Value<int> id = const Value.absent(),
